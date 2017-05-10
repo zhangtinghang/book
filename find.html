@@ -13,8 +13,8 @@
 	<script type="text/javascript">
 	$(".box").on("click",function(){
 		$.ajax({
-			type:'get',
-			url:'http://localhost:3000/find',
+			type:'post',
+			url:'http://39.108.53.121:80/find',
 			success:function(data){
 				console.log(data);
 			},

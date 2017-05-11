@@ -256,7 +256,7 @@ app.get('/deleteUser',function(req,res){
 
 //配置服务端口
 http.createServer(app).listen('3000','39.108.53.121');
-var server = app.listen(80, function () {
+var server = app.listen(3000, function () {
 var host = server.address().address;
  var port = server.address().port;
     console.log('Example app listening at http://%s:%s', host, port);

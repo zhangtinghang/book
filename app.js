@@ -254,10 +254,19 @@ app.get('/deleteUser',function(req,res){
 	});
 })
 
+
+http.createServer(function(req,res){
+    res.writeHead(200,{
+        "content-type":"text/plain"
+    });
+    res.write("hello nodejs");
+    res.end();
+}).listen('80','39.108.53.121');
+
 //配置服务端口
 //http.createServer(app).listen('80','39.108.53.121');
-var server = app.listen(80, function () {
-var host = server.address().address;
- var port = server.address().port;
-    console.log('Example app listening at http://%s:%s', host, port);
-})
+//var server = app.listen(80, function () {
+//var host = server.address().address;
+//var port = server.address().port;
+//    console.log('Example app listening at http://%s:%s', host, port);
+//})

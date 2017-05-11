@@ -1,7 +1,7 @@
 //配置mongodb数据库相关的内容
 var mongodb = require('mongodb');
 var MongoClient = mongodb.MongoClient;
-var DB_CONN_STR = 'mongodb://localhost:27017/book';
+var DB_CONN_STR = 'mongodb://39.108.53.121:27017/book';
 //配置node服务器相关内容：
 var express = require('express');
 var app = express();
@@ -254,7 +254,7 @@ app.get('/deleteUser',function(req,res){
 })
 
 //配置服务端口
-var server = app.listen(3000, function () {
+var server = app.listen(80, function () {
 var host = server.address().address;
  var port = server.address().port;
     console.log('Example app listening at http://%s:%s', host, port);

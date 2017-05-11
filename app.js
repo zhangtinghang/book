@@ -6,6 +6,7 @@ var DB_CONN_STR = 'mongodb://39.108.53.121:27017/book';
 var express = require('express');
 var app = express();
 var bodyParder = require('body-parser');
+var http = require('http');
 app.use(bodyParder.urlencoded({extended:true}));
 
 //设置跨域访问

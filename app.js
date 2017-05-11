@@ -255,7 +255,7 @@ app.get('/deleteUser',function(req,res){
 })
 
 //配置服务端口
-http.createServer(app).listen('80','39.108.53.121');
+//http.createServer(app).listen('80','39.108.53.121');
 var server = app.listen(80, function () {
 var host = server.address().address;
  var port = server.address().port;

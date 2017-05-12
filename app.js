@@ -136,6 +136,21 @@ app.post('/delete',function(req,res){
 	});
 })
 
+//cheshi
+app.get('/',function(req,res){
+	var response ='<html><head><title>Simple Send</title></head>'+
+				  '<body><h1>Hello form Express</h1></body></html>';
+	res.status(200);
+	res.set({
+		'Content-Type':'text/html',
+		'Content-Length':response.length
+	});
+	res.send(response);
+	console.log('Response Finished?' + res.finished);
+	console.log('\nHeader Sent :');
+	console.log(res.headerSent);
+})
+
 //添加用户信息
 app.post('/addUser',function(req,res){
 var insertData = function(db, callback) {  

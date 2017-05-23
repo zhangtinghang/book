@@ -38,106 +38,68 @@ app.get('/',function(req,res){
 //	response.writeHead(200, {"Content-Type": "text/html"});
 //	response.write(html);
 //	response.end();
-	var response ='<html><head><title>Simple Send</title></head>'+
-				  '<body><h1>Hello form Express</h1></body></html>';
-	res.status(200);
-	res.set({
-		'Content-Type':'text/html',
-		'Content-Length':response.length
-	});
-	res.send(response);
+//https://api.douban.com/v2/book/isbn/:9787501964376
+	var isbn = 9787501964376;
+	var addOptions = {
+	    hostname:'api.douban.com',
+	    path:'/v2/book/isbn/:'+isbn,
+	    method: 'GET'
+	};
+//发送请求
+var req = https.request(addOptions,function(res){
+	console.log('状态码：', res.statusCode);
+  	console.log('请求头：', res.headers);
+    res.setEncoding('utf8');
+    res.on('data',function(chunk){
+    	var bookData = chunk;
+     	var returnData = JSON.parse(chunk);//如果服务器传来的是json字符串，可以将字符串转换成json
+     	console.log(returnData.pages)
+   	addCollection(returnData);
+    });
+});
+//如果有错误会输出错误
+req.on('error', function(e){
+     console.log('错误：' + e.message);
+});
+req.end();
+
 })
 
 
 //添加数据
 app.post('/add',function(req,res)  {
-var insertData = function(db, callback) {
+	var isbn = 9787501964376;
+	var addOptions = {
+	    hostname:'api.douban.com',
+	    path:'/v2/book/isbn/:'+isbn,
+	    method: 'GET'
+	};
+//发送请求
+	var bookData='';
+	var returnData = '';
+var req = https.request(addOptions,function(res){
+	console.log('状态码：', res.statusCode);
+  	console.log('请求头：', res.headers);
+    res.setEncoding('utf8');
+    res.on('data',function(chunk){
+    	bookData = chunk;
+     	returnData = JSON.parse(chunk);//如果服务器传来的是json字符串，可以将字符串转换成json
+     	console.log(returnData.pages)
+   		addCollection(returnData);
+    });
+});
+//如果有错误会输出错误
+req.on('error', function(e){
+     console.log('错误：' + e.message);
+});
+req.end();
+});
+//添加数据到数据库中
+function addCollection(returnData){
+	var insertData = function(db, callback) {
     //连接到表 sites
     var collection = db.collection('sites');
-    //插入数据
-    var author = "理查兹"; //作者(数组)
-    var pudate = "2007-3"; //上架日期
-    var bookImage = "https://img1.doubanio.com\/mpic\/s5811478.jpg"; //图片
-    var id = "2056914"; //图书id
-    var publisher = "外语教学与研究"; //出版社
-    var isbn10 = "7560062415"; //isbn编码
-    var isbn13 = "9787560062419";
-    var title = "剑桥国际英语教程"; //名称
-    //简介
-    var summary = "《剑桥国际英语教程》（第3版）这套教材的主要产品包括学生用书（附赠词汇手册）、教师用书。练习册、录音带或CD、录像教材、DVD和CD-ROM等。另外，学生用书和练习册分两个版本——全一册和A、B分册，便于广大师生根据需要选择。录像教材可以作为视听说培训教材单独使用。主要特色：综合培养听说读写技能，兼顾准备和流利度，在交际语境中学习语法，在任务型活动中训练听力，富有时代气息的话题，生动自然的对话语言，全新的语音学习大纲，活泼有趣的口语活动，完善的复习和测试系统，独特的单元自学听力练习，寓教于乐的视听说配套产品，科学的教师培训服务体系。\n\n 剑桥国际英语教程"; 	
- 	var price = "49.90元";//价格 	
- 	var page = "113";//页数
- 	//藏书量
- 	//分类
- var data = [{
-	        //副标题
-	        "subtitle": "",
-	        //作者
-	        "author": author,
-	        //上架日期
-	        "pubdate": pudate,
-	        //分类
-	        "tags": [
-	            {
-	                "count": 1,
-	                "name": "英语",
-	                "title": "英语"
-	            },
-	            {
-	                "count": 1,
-	                "name": "藏书",
-	                "title": "藏书"
-	            },
-	            {
-	                "count": 1,
-	                "name": "语言·写作",
-	                "title": "语言·写作"
-	            }
-	        ],
-	        //组织名称
-	        "origin_title": "",
-	        //图片
-	        "image": bookImage,
-	        //装订
-	        "binding": "",
-	        //翻译者
-	        "translator": [
-	            
-	        ],
-	        //目录
-	        "catalog": "",
-	        //页数
-	        "pages": page,
-	        "images": {
-	            "small": "https://img1.doubanio.com\/spic\/s5811478.jpg",
-	            "large": "https://img1.doubanio.com\/lpic\/s5811478.jpg",
-	            "medium": "https://img1.doubanio.com\/mpic\/s5811478.jpg"
-	        },
-	        "alt": "https:\/\/book.douban.com\/subject\/2056914\/",
-	        //图书id
-	        "id": id,
-	        //出版社
-	        "publisher": "外语教学与研究",
-	        //isbn编码
-	        "isbn10": isbn10,
-	        "isbn13": isbn13,
-	        //名称
-	        "title": title,
-	       	//地址
-	        "url": "https:\/\/api.douban.com\/v2\/book\/2056914",
-	        "alt_title": "",
-	        //作者简介
-	        "author_intro": "",
-	       	//摘要信息
-	        "summary": summary,
-	        //价格
-	        "price": price,
-	        //评论
-	        "comments":{
-	        	
-	        }
-	    }];
-	    console.log('这是模块' + data);
+    var data = returnData;
 	 collection.insert(data, function(err, result) { 
         if(err)
         {
@@ -157,8 +119,7 @@ MongoClient.connect(DB_CONN_STR, function(err, db) {
         db.close();
     });
 });
-})
-
+}
 //查询数据
 app.get('/find',function(req,res){
 	var password = req.body.password;
@@ -167,7 +128,7 @@ app.get('/find',function(req,res){
 		//连接到数据文档
 		var collection=db.collection('sites');
 		//查询数据
-		var whereStr={"publisher":"外语教学与研究"};  //我们要查询的信息是所有包含这个内容的数据。
+		var whereStr={"title":"行为科学统计"};  //我们要查询的信息是所有包含这个内容的数据。
 		collection.find(whereStr).toArray(function(err,result){
 			if(err){
 				console.log('Error:'+err);
@@ -183,7 +144,7 @@ app.get('/find',function(req,res){
 			console.log(result);
 			//把数据返回给前端
 			res.status(200),
-			res.json(result)	
+			res.json(result)
 			db.close();
 		})
 	})

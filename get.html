@@ -13,8 +13,8 @@
 	<script type="text/javascript">
 	$(".box").on("click",function(){
 		$.ajax({
-			type:'post',
-			url:'https://localhost:443/add',
+			type:'get',
+			url:'https://localhost:443/find',
 			success:function(data){
 				console.log(data);
 			},

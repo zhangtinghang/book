@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "art-template": "^4.9.1",
+    "express-art-template": "^1.0.0"
+  }
+}

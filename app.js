@@ -116,6 +116,9 @@ MongoClient.connect(DB_CONN_STR, function(err, db) {
     console.log("连接成功！");
     insertData(db, function(result) {
         console.log(result);
+        //把数据返回给前端
+			res.status(200),
+			res.json(result)
         db.close();
     });
 });
@@ -249,7 +252,7 @@ var insertData = function(db, callback) {
 		var collection=db.collection('sitesUser');
 		//查询数据
 		var whereStr={"title":"剑桥国际英语教程"};  //我们要查询的信息是所有包含这个内容的数据。
-		collection.find(whereStr).toArray(function(err,result){
+		collection.find().toArray(function(err,result){
 			if(err){
 				console.log('Error:'+err);
 				return;

@@ -167,7 +167,7 @@ app.get('/find',function(req,res){
 		//连接到数据文档
 		var collection=db.collection('sites');
 		//查询数据
-		var whereStr={"title":"剑桥国际英语教程"};  //我们要查询的信息是所有包含这个内容的数据。
+		var whereStr={"publisher":"外语教学与研究"};  //我们要查询的信息是所有包含这个内容的数据。
 		collection.find(whereStr).toArray(function(err,result){
 			if(err){
 				console.log('Error:'+err);

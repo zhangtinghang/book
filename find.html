@@ -13,8 +13,9 @@
 	<script type="text/javascript">
 	$(".box").on("click",function(){
 		$.ajax({
-			type:'get',
-			url:'https://39.108.53.121:443/find',
+			type:'post',
+//			url:'https://39.108.53.121:443/find',
+			url:'https://localhost:443/add',
 			success:function(data){
 				console.log(data);
 			},

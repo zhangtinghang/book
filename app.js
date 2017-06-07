@@ -8,9 +8,11 @@ var express = require('express');
 var app = express();
 var path = require('path');
 var bodyParder = require('body-parser');
+
 //引入jade模块
 app.set('views', './views/pages')
 app.set('view engine', 'jade') //模块引擎
+
 //配置https链接
 var http = require('http');
 var https = require('https');
@@ -25,12 +27,21 @@ var  options = {
 	 cert: certificate
 }; 
 var  server  =  https.createServer(options,  app);
+
 //配置汉字转化为拼音
 var pinyin = require("pinyin");
+
 //配置表单上传图片
 var multiparty = require('multiparty'); //文件上传模块
 var util = require('util');
 app.use(express.static(path.join(__dirname, 'bower_components'))) //设置静态文件路径
+
+//配置ObjectId转化
+ObjectId = require('mongodb').ObjectID;
+
+//引入时间转换
+var sd = require('silly-datetime');
+
 //设置跨域访问
 app.all('*', function(req, res, next) {  
 	res.header("Access-Control-Allow-Origin", "*");  
@@ -40,13 +51,16 @@ app.all('*', function(req, res, next) {  
 	res.header("Content-Type", "application/json;charset=utf-8");  
 	next();
 });
-
 //cheshi
-app.post("/", function(req, res) {})
+app.post("/",function(){
+	
+});
 
-//扫描添加数据
+//后台管理员扫描添加图书数据
 app.post('/add', function(req, res) {
-	var isbn = 9787040463347;
+	var isbn = req.body.isbn;
+	var count = '';
+	var sort = '';
 	var addOptions = {
 		hostname: 'api.douban.com',
 		path: '/v2/book/isbn/:' + isbn,
@@ -59,8 +73,8 @@ app.post('/add', function(req, res) {
 		res.setEncoding('utf8');
 		res.on('data', function(chunk) {
 			var chunk = JSON.parse(chunk);
-			var count = 1;
-			var sort = 'A';
+			count = 1;
+			sort = 'A';
 			var author = chunk.author; //作者(数组)
 			var pudate = chunk.pubdate; //上架日期
 			var bookImage = chunk.image; //图片
@@ -75,10 +89,6 @@ app.post('/add', function(req, res) {
 			var page = chunk.pages; //页数
 			var catalog = chunk.catalog; //目录
 			var tags = [];
-			console.log(author)
-			console.log(pudate)
-			console.log(bookImage)
-			console.log(id)
 			var bookData = {
 				count: count,
 				sort: sort,
@@ -108,37 +118,32 @@ app.post('/add', function(req, res) {
 	req.end();
 });
 
-//后台添加数据
+//web端添加图书数据
 app.post('/adminAdd', function(req, res) {
 	var form = new multiparty.Form(); //实例一个multiparty
 	form.encoding = 'utf-8'; //设置编辑
 	form.uploadDir = __dirname + "/bower_components/imgs/"; //设置文件储存路径
 	//开始解析前台传过来的文件
 	form.parse(req, function(err, fields, files) {
-		console.log("这是第一个哟" + fields);
-		console.log("这是文件" + files);
-		console.log("这是错误" + err);
-		var filesTmp = JSON.stringify(files);
-		var inputData = JSON.stringify(fields);
-		console.log('这是解析inputData' + inputData);
-		console.log('这是解析files后的 ' + filesTmp);
 		if(err) {
 			console.log('parse error: ' + err);
-			[0]
 		} else {
+			var bookImage = '';
 			var inputFile = files.upfiles[0]; //获取第一个文件
-			var finalname = inputFile.originalFilename;
-			var new_name = __dirname + "/bower_components/imgs/" + finalname; //获取文件名
-			console.log('new_name' + new_name);
-			var old_name = inputFile.path; //获取文件路径
-			fs.renameSync(old_name, new_name);
-			console.log(fields.count[0]);
+			if(inputFile.size != 0) {
+				var finalname = inputFile.originalFilename;
+				var new_name = __dirname + "/bower_components/imgs/" + finalname; //获取文件名
+				console.log('new_name' + new_name);
+				var old_name = inputFile.path; //获取文件路径
+				fs.renameSync(old_name, new_name);
+				console.log(fields.count[0]);
+				bookImage = new_name; //图片
+			}
 			//解析完成后存储到数据库
 			var count = fields.count[0];
 			var sort = fields.sort[0];
 			var author = fields.author; //作者(数组)
 			var pudate = fields.pubdate[0]; //上架日期
-			var bookImage = new_name; //图片
 			var id = fields.id[0]; //图书id
 			var publisher = fields.publisher[0]; //出版社
 			var isbn10 = fields.isbn10[0]; //isbn编码
@@ -155,7 +160,6 @@ app.post('/adminAdd', function(req, res) {
 				sort: sort,
 				author: author,
 				pudate: pudate,
-				img: bookImage,
 				id: id,
 				publisher: publisher,
 				isbn10: isbn10,
@@ -168,12 +172,15 @@ app.post('/adminAdd', function(req, res) {
 				catalog: catalog,
 				tags: tags
 			}
+			if(bookImage) {
+				bookData.img = bookImage;
+			}
 			findCollection(bookData);
 		}
 	})
 });
 
-//查询是否有数据 如果有 则更新 无 则插入
+//查询是否有数据 如果有 则更新 无 则插入(函数)
 function findCollection(bookData) {
 	//首先得从库里拿到数据
 	var selectData = function(db, callback) {
@@ -205,7 +212,7 @@ function findCollection(bookData) {
 		})
 	})
 }
-//插入数据到数据库中
+//插入图书数据到数据库中(函数)
 function addCollection(bookData) {
 	var insetData = function(db, callback) {
 		//连接到表 sites
@@ -228,7 +235,7 @@ function addCollection(bookData) {
 	});
 }
 
-//更新数据到数据库中
+//更新图书到数据库中函数
 function updataCollection(bookData) {
 	var updatetData = function(db, callback) {
 		//连接到表 sites
@@ -259,26 +266,86 @@ function updataCollection(bookData) {
 	});
 }
 
-//查询数据
-app.get('/find', function(req, res) {
-	var password = req.body.password;
+//查询图书数据(type=0 查询文档所有集合;type=1 仅支持关键字查询;type=2支持关键字 拼音 标题 作者 类型 isbn 简介查询;type=3 支持_id查找图书详细信息)
+app.post('/find', function(req, res) {
+	var keywords = req.body.keywords;
+	var type = req.body.type;
 	//首先得从库里拿到数据
 	var selectData = function(db, callback) {
 		//连接到数据文档
 		var collection = db.collection('sites');
-		//查询数据
-		var whereStr = {
-			"title": "行为科学统计"
-		}; //我们要查询的信息是所有包含这个内容的数据。
-		collection.find(whereStr).toArray(function(err, result) {
-			if(err) {
-				console.log('Error:' + err);
-				return;
+		if(type == 0) {
+			//查询数据
+			collection.find().toArray(function(err, result) {
+				if(err) {
+					console.log('Error:' + err);
+					return;
+				}
+				callback(result);
+			})
+		} else if(type == 2) {
+			//查询数据
+			var whereStr = {
+				$or: [{
+						title: keywords
+					},
+					{
+						sort: keywords
+					},
+					{
+						author: keywords
+					},
+					{
+						publisher: keywords
+					},
+					{
+						isbn10: keywords
+					},
+					{
+						isbn13: keywords
+					},
+					{
+						bookpinyin: keywords
+					},
+					{
+						summary: keywords
+					}
+				]
+			};
+			//查询数据
+			collection.find(whereStr).toArray(function(err, result) {
+				if(err) {
+					console.log('Error:' + err);
+					return;
+				}
+				callback(result);
+			})
+		} else if(type == 1) {
+			var whereStr = {
+				sort: keywords
 			}
-			callback(result);
-		})
+			collection.find(whereStr).toArray(function(err, result) {
+				if(err) {
+					console.log('Error:' + err);
+					return;
+				}
+				callback(result);
+			})
+		}else if(type = 3){
+			var _id = keywords;
+			var _idObj = new ObjectId(_id);
+			var whereStr = {
+				"_id" : _idObj
+			}
+			collection.find(whereStr).toArray(function(err, result) {
+				if(err) {
+					console.log('Error:' + err);
+					return;
+				}
+				callback(result);
+			})
+		}
 	}
-
 	MongoClient.connect(DB_CONN_STR, function(err, db) {
 		console.log("连接成功");
 		selectData(db, function(result) {
@@ -289,56 +356,110 @@ app.get('/find', function(req, res) {
 			db.close();
 		})
 	})
-})
+});
 
-//修改数据
+//修改图书数据(仅支持关键字修改)
 app.post('/modification', function(req, res) {
-	var password = req.body.password;
-	//首先得从库里找到数据
-	var updateData = function(db, callback) {
-		//连接到数据文档
-		var collection = db.collection('sites');
-		//查询数据
-		var whereStr = {
-			"username": "fanhu"
-		}; //我们要修改的目标信息是所有包含这个内容的数据。
-		var updataStr = {
-			$set: {
-				"password": password
+	var form = new multiparty.Form(); //实例一个multiparty
+	form.encoding = 'utf-8'; //设置编辑
+	form.uploadDir = __dirname + "/bower_components/imgs/"; //设置文件储存路径
+	var response = res;
+	//开始解析前台传过来的文件
+	form.parse(req, function(err, fields, files) {
+		if(err) {
+			console.log('parse error: ' + err);
+		} else {
+			var bookImage = '';
+			var inputFile = files.upfiles[0]; //获取第一个文件
+			if(inputFile.size != 0) {
+				var finalname = inputFile.originalFilename;
+				var new_name = __dirname + "/bower_components/imgs/" + finalname; //获取文件名
+				console.log('new_name' + new_name);
+				var old_name = inputFile.path; //获取文件路径
+				fs.renameSync(old_name, new_name);
+				console.log(fields.count[0]);
+				bookImage = new_name; //图片
 			}
-		}; //要修改的信息，使用不同的更新器结果不一样，昨天已经详细讲过。
 
-		collection.update(whereStr, updataStr, function(err, result) {
-			if(err) {
-				console.log('Error:' + err);
-				return;
+			//解析完成后存储到数据库
+			var count = fields.count[0];
+			var sort = fields.sort[0];
+			var author = fields.author; //作者(数组)
+			var pudate = fields.pubdate[0]; //上架日期
+			var id = fields.id[0]; //图书id
+			var publisher = fields.publisher[0]; //出版社
+			var isbn10 = fields.isbn10[0]; //isbn编码
+			var isbn13 = fields.isbn13[0];
+			var bookpinyin = pinyin(fields.title[0]);
+			var title = fields.title[0]; //名称   
+			var summary = fields.summary[0]; //简介
+			var price = fields.price[0]; //价格 	
+			var page = fields.page[0]; //页数
+			var catalog = fields.catalog[0]; //目录
+			var tags = [];
+			var bookData = {
+				count: count,
+				sort: sort,
+				author: author,
+				pudate: pudate,
+				id: id,
+				publisher: publisher,
+				isbn10: isbn10,
+				isbn13: isbn13,
+				bookpinyin: bookpinyin,
+				title: title,
+				summary: summary,
+				price: price,
+				page: page,
+				catalog: catalog,
+				tags: tags
 			}
-			callback(result);
-		});
-	}
-
-	MongoClient.connect(DB_CONN_STR, function(err, db) {
-		console.log("连接成功");
-		updateData(db, function(result) {
-			console.log(result);
-			//到这里数据库中对应的信息已经进行了修改，
-			db.close();
-		});
-	});
+			if(bookImage) {
+				bookData.img = bookImage;
+			}
+			var modData = function(db, callback) {
+				//连接到表 sites
+				var collection = db.collection('sites');
+				collection.update({
+					title: title
+				}, {
+					$set: {
+						bookData
+					}
+				}, function(err, result) {
+					if(err) {
+						console.log('Error:' + err);
+						return;
+					} else {
+						console.log('存取成功')
+					}
+					callback(result);
+				});
+			}
+			MongoClient.connect(DB_CONN_STR, function(err, db) {
+				console.log("修改成功！");
+				modData(db, function(result) {
+					db.close();
+				});
+			});
+		}
+	})
 })
 
-//删除数据
+//删除图书数据(web端)
 app.post('/delete', function(req, res) {
-	var password = req.body.password;
+	var _id = req.body._id;
+	var _idObj = new ObjectId(_id);
+	console.log("传递到的" + _idObj)
 	//首先得从库里找到数据
 	var delData = function(db, callback) {
 		//连接到数据文档
 		var collection = db.collection('sites');
 		//查询数据
 		var whereStr = {
-			"username": "fanhu"
+			"_id": _idObj
 		}; //我们要删除的目标信息是所有包含这个内容的数据。
-
+		console.log(whereStr)
 		collection.remove(whereStr, function(err, result) {
 			if(err) {
 				console.log('Error:' + err);
@@ -351,101 +472,134 @@ app.post('/delete', function(req, res) {
 	MongoClient.connect(DB_CONN_STR, function(err, db) {
 		console.log("连接成功");
 		delData(db, function(result) {
-			//			console.log(result);
+			console.log("删除成功!")
+			//console.log(result);
 			//到这里数据库中对应的信息已经进行了修改，
+			res.status(200);
+			res.json({
+				success: "true"
+			})
 			db.close();
 		});
 	});
 })
 
-//添加用户信息
-app.post('/addUser', function(req, res) {
-	var insertData = function(db, callback) {
-		//连接到表 sites
-		var collection = db.collection('sitesUser');
-		//插入数据
-		var data = [{
-			"rating": {
-				"max": 10,
-				"numRaters": 1,
-				"average": "0.0",
-				"min": 0
-			},
-			"subtitle": "",
-			"author": ["理查兹"],
-			"pubdate": "2007-3",
-			"tags": [{
-				"count": 1,
-				"name": "英语",
-				"title": "英语"
-			}, {
-				"count": 1,
-				"name": "藏书",
-				"title": "藏书"
-			}, {
-				"count": 1,
-				"name": "语言·写作",
-				"title": "语言·写作"
-			}],
-			"origin_title": "",
-			"image": "https://img1.doubanio.com\/mpic\/s5811478.jpg",
-			"binding": "",
-			"translator": [],
-			"catalog": "",
-			"pages": "113",
-			"images": {
-				"small": "https://img1.doubanio.com\/spic\/s5811478.jpg",
-				"large": "https://img1.doubanio.com\/lpic\/s5811478.jpg",
-				"medium": "https://img1.doubanio.com\/mpic\/s5811478.jpg"
-			},
-			"alt": "https:\/\/book.douban.com\/subject\/2056914\/",
-			"id": "2056914",
-			"publisher": "外语教学与研究",
-			"isbn10": "7560062415",
-			"isbn13": "9787560062419",
-			"title": "剑桥国际英语教程",
-			"url": "https:\/\/api.douban.com\/v2\/book\/2056914",
-			"alt_title": "",
-			"author_intro": "",
-			"summary": "《剑桥国际英语教程》（第3版）这套教材的主要产品包括学生用书（附赠词汇手册）、教师用书。练习册、录音带或CD、录像教材、DVD和CD-ROM等。另外，学生用书和练习册分两个版本——全一册和A、B分册，便于广大师生根据需要选择。录像教材可以作为视听说培训教材单独使用。主要特色：综合培养听说读写技能，兼顾准备和流利度，在交际语境中学习语法，在任务型活动中训练听力，富有时代气息的话题，生动自然的对话语言，全新的语音学习大纲，活泼有趣的口语活动，完善的复习和测试系统，独特的单元自学听力练习，寓教于乐的视听说配套产品，科学的教师培训服务体系。\n\n 剑桥国际英语教程",
-			"price": "49.90元"
-		}];
-		collection.insert(data, function(err, result) {
-			if(err) {
-				console.log('Error:' + err);
-				return;
-			} else {
-				console.log('存取成功')
+//用户集合
+//微信登录(存储到文档中 返回成功和token用于查询)
+app.post('/loginWeixin',function(req,res){
+	var code = req.body.code;
+	var APPID = '';
+	var SECRET = secret;
+	var JSCODE = code;
+	var addOptions = {
+		hostname: 'api.weixin.qq.com',
+		path: '/sns/jscode2session?appid='+APPID+'&secret='+SECRET+'&js_code='+JSCODE+'&grant_type=authorization_code',
+		method: 'GET'
+	};
+	//发送请求
+	var req = https.request(addOptions, function(res) {
+		//	console.log('状态码：', res.statusCode);
+		//	console.log('请求头：', res.headers);
+		res.setEncoding('utf8');
+		res.on('data', function(chunk) {
+			var chunk = JSON.parse(chunk);
+			var openid = chunk.openid;
+			var session_key = chunk.session_key;
+		});
+	});
+	//如果有错误会输出错误
+	req.on('error', function(e) {
+		console.log('错误：' + e.message);
+	});
+	req.end();
+});
+
+//前端添加用户信息(根据token找到用户 添加个人信息)
+app.post('/addUserPhone', function(req, res) {
+	var form = new multiparty.Form(); //实例一个multiparty
+	form.encoding = 'utf-8'; //设置编辑
+	//开始解析前台传过来的文件
+	form.parse(req, function(err, fields, files) {
+		if(err) {
+			console.log('parse error: ' + err);
+		} else {
+			var username = fields.username[0];
+			var phone = fields.phone[0];
+			var weixinid = fields.weixinid[0];
+			var avatar = fields.avatar[0];
+			var IDcard = fields.IDcard[0];
+			var payData = 0;
+			var wait = [];
+			var underway = [];
+			var historical = [];
+			var token = 123142151355;
+			console.log(username);
+		//	//构建underway对象
+		//	var useObj =new Object();
+		//	useObj.nowDay = sd.format(new Date(), 'YYYY-MM-DD HH:mm');
+		//	useObj.returnDay = sd.format(new Date() + 2592000);
+			var insertData = function(db, callback) {
+				//连接到表 sitesUser
+				var collection = db.collection('sitesUser');
+				//查询数据
+				var wheredata = {
+					"token":token
+				}
+				//插入数据
+				var updata = {
+					$set:{
+						user:{
+							username:username,
+							phone:phone,
+							weixinid:weixinid,
+							avatar:avatar,
+							IDcard:IDcard
+						},
+						payData:payData,
+						wait:wait,
+						underway:underway,
+						historical:historical
+					}
+				};
+				collection.update(wheredata,updata,{upsert:true}, function(err, result) {
+					if(err) {
+						console.log('Error:' + err);
+						return;
+					} else {
+						console.log('存取成功')
+					}
+					callback(result);
+				});
 			}
-			callback(result);
-		});
-	}
+		
+			MongoClient.connect(DB_CONN_STR, function(err, db) {
+				console.log("连接成功！");
+				insertData(db, function(result) {
+					console.log('添加用户信息成功')
+					db.close();
+				});
+			});			
+		}
+	})
 
-	MongoClient.connect(DB_CONN_STR, function(err, db) {
-		console.log("连接成功！");
-		insertData(db, function(result) {
-			console.log(result);
-			db.close();
-		});
-	});
 })
 
-//查询用户信息
+//前端获取用户信息(token)
 app.post('/findUser', function(req, res) {
-	var insertData = function(db, callback) {
-		var password = req.body.password;
+//		var token = req.body.token;
+		var token = 123142151355;
 		//首先得从库里拿到数据
 		var selectData = function(db, callback) {
 			//连接到数据文档
 			var collection = db.collection('sitesUser');
 			//查询数据
 			var whereStr = {
-				"title": "剑桥国际英语教程"
+				"token": token
 			}; //我们要查询的信息是所有包含这个内容的数据。
-			collection.find().toArray(function(err, result) {
+			collection.find(whereStr).toArray(function(err, result) {
 				if(err) {
 					console.log('Error:' + err);
-					return;
+					return callback(err);
 				}
 				callback(result);
 			})
@@ -456,23 +610,51 @@ app.post('/findUser', function(req, res) {
 				console.log(result);
 				//把数据返回给前端
 				res.status(200),
-					res.json(result)
+				res.json(result)
 				db.close();
 			})
 		})
-	}
 })
 
-//修改用户信息
-app.get('/modificationUser', function(req, res) {
-	var password = req.body.password;
+//后台查询用户信息(web端 可查询所有 和名字查找?空字符串是否返回所有?待解决)
+app.post('/findUserPc',function(req,res){
+	var username = req.body.username;
+	//首先得从库里找到数据
+	var findData = function(db, callback) {
+		//连接到数据文档
+		var collection = db.collection('sitesUser');
+		//查询数据
+		var whereStr = {
+			"username": username
+		}; //我们要修改的目标信息是所有包含这个内容的数据。
+
+		collection.find(whereStr).toArray(function(err, result) {
+			if(err) {
+				console.log('Error:' + err);
+				return;
+			}
+			callback(result);
+		})
+	}
+	MongoClient.connect(DB_CONN_STR, function(err, db) {
+		console.log("连接成功");
+		findData(db, function(result) {
+			console.log(result);		
+			db.close();
+		});
+	}); 
+})
+
+//修改用户信息(web端)
+app.post('/modificationUser', function(req, res) {
+	var username = req.body.username;
 	//首先得从库里找到数据
 	var updateData = function(db, callback) {
 		//连接到数据文档
 		var collection = db.collection('sitesUser');
 		//查询数据
 		var whereStr = {
-			"username": "fanhu"
+			"username": username
 		}; //我们要修改的目标信息是所有包含这个内容的数据。
 		var updataStr = {
 			$set: {
@@ -498,7 +680,7 @@ app.get('/modificationUser', function(req, res) {
 	});
 })
 
-//删除用户信息
+//删除用户信息(web端)
 app.get('/deleteUser', function(req, res) {
 	var insertData = function(db, callback) {
 		var password = req.body.password;
@@ -529,6 +711,105 @@ app.get('/deleteUser', function(req, res) {
 		});
 	});
 })
+
+//APP内逻辑操作接口
+//1.用户扫描图书后添加图书
+app.post('/getBook', function(req, res) {
+//	var isbn = req.body.isbn;
+//	var token = req.body.token;
+	var isbn13 = "9787040463347";
+	var token = 123142151355;
+	//首先得从库里找到图书并返回_id
+	var findBook = function(db, callback) {
+		//连接到数据文档
+		var collection = db.collection('sites');
+		//查询数据
+		var whereStr = {
+			"isbn13": isbn13
+		}; //我们要修改的目标信息是所有包含这个内容的数据。
+
+		collection.find(whereStr).toArray(function(err, result) {
+			if(err) {
+				console.log('Error:' + err);
+				return;
+			}
+			//找到用户后将图书信息引用到wait[]中
+			callback(result);
+		})
+	}
+	
+	var addUser = function(db,_idStr,callback){
+		//连接到数据文档
+		var _id = new ObjectId(_idStr);
+		var collection = db.collection('sitesUser');
+		var whereStr = {
+			"token" : token
+		};
+		var upStr = {
+			$push:{
+				"wait":{_id}
+			}
+		}
+		collection.update(whereStr,upStr,function(err,result){
+			if(err){
+				console.log('Error:' + err);
+				return;
+			}
+			callback(result);
+		})
+	}
+	MongoClient.connect(DB_CONN_STR, function(err, db) {
+		console.log("连接成功");
+		findBook(db, function(result) {
+			var resStr = JSON.stringify(result);
+			var resultObj = JSON.parse(resStr);//将JSON转换为js对象
+			var _idStr = resultObj[0]._id;
+			addUser(db,_idStr,function(result){
+				console.log("插入数组成功");
+				//插入数组成功后返回
+				res.status(200),
+				res.json(result)
+				db.close();
+			})
+		});
+	}); 
+})
+
+//扫描二维码并获取数据 修改数组操作(修改用户图书信息 后台管理员端)
+app.post('/borrowBook',function(req,res){
+	var username = req.body.username;
+	//首先得从库里找到数据
+	var updateData = function(db, callback) {
+		//连接到数据文档
+		var collection = db.collection('sitesUser');
+		//查询数据
+		var whereStr = {
+			username: username
+		}; //我们要修改的目标信息是所有包含这个内容的数据。
+		var updataStr = {
+//			$pull: {
+//				: 
+//			}
+		}; //要修改的信息，使用不同的更新器结果不一样，昨天已经详细讲过。
+
+		collection.findAndModify(whereStr, updataStr, function(err, result) {
+			if(err) {
+				console.log('Error:' + err);
+				return;
+			}
+			callback(result);
+		});
+	}
+	MongoClient.connect(DB_CONN_STR, function(err, db) {
+		console.log("连接成功");
+		updateData(db, function(result) {
+			console.log(result);
+			//到这里数据库中对应的信息已经进行了修改，
+			db.close();
+		});
+	});
+})
+
 
 //配置服务端口
 server.listen(443, function() {

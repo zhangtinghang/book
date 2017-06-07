@@ -12,10 +12,16 @@
 	<script type="text/javascript" src="js/jquery-1.11.0.js" ></script>
 	<script type="text/javascript">
 	$(".box").on("click",function(){
+//		var _id ="59293b78ca037cb8787b5d59";
+////		_id = ObjectId("").String();
+//		console.log(_id)
 		$.ajax({
 			type:'post',
 //			url:'https://39.108.53.121:443/find',
-			url:'https://localhost:443/add',
+			url:'https://localhost:443/getBook',
+//			data:{
+//				_id:_id
+//			},
 			success:function(data){
 				console.log(data);
 			},

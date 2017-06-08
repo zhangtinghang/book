@@ -52,11 +52,11 @@ app.all('*', function(req, res, next) {  
 	next();
 });
 //cheshi
-app.post("/",function(req,res){
+app.get("/",function(req,res){
 	var isbn = req.body.isbn;
 	console.log(isbn)
 	res.status(200),
-	res.json("success:ok")	
+	res.json("success:ok")
 });
 
 //后台管理员扫描添加图书数据

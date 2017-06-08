@@ -17,12 +17,12 @@
 var isbn = '1234567890';
 //		console.log(_id)
 		$.ajax({
-			type:'get',
-			url:'https://39.108.53.121/',
+			type:'post',
+			url:'https://39.108.53.121',
 //			url:'https://localhost:443/',
-//			data:{
-//				isbn:isbn
-//			},
+			data:{
+				isbn:isbn
+			},
 			success:function(data){
 				console.log(data);
 			},

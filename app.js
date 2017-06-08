@@ -52,16 +52,16 @@ app.all('*', function(req, res, next) {  
 	next();
 });
 //cheshi
-app.get("/",function(req,res){
-	var isbn = req.query.isbn;
+app.post("/",function(req,res){
+	var isbn = req.body.isbn;
 	console.log(isbn)
 	res.status(200),
 	res.json("success:ok")
 });
 
 //后台管理员扫描添加图书数据
-app.get('/add', function(req, res) {
-	var isbn = req.query.isbn;
+app.post('/add', function(req, res) {
+	var isbn = req.body.isbn;
 	console.log('这是接收到的isbn码'+isbn)
 	var count = '';
 	var sort = '';

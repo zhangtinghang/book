@@ -17,8 +17,8 @@ app.set('view engine', 'jade') //模块引擎
 var http = require('http');
 var https = require('https');
 var fs = require('fs');
-var  privatekey  =  fs.readFileSync('https/privatekey.pem',  'utf8');  
-var  certificate  =  fs.readFileSync('https/certificate.pem',  'utf8');  
+var  privatekey  =  fs.readFileSync('https/214132877090439.key',  'utf8');  
+var  certificate  =  fs.readFileSync('https/214132877090439.pem',  'utf8');  
 app.use(bodyParder.urlencoded({
 	extended: true
 }));

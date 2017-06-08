@@ -52,7 +52,7 @@ app.all('*', function(req, res, next) {  
 	next();
 });
 //cheshi
-app.post("/",function(){
+app.get("/",function(){
 	var isbn = req.body.isbn;
 	console.log(isbn)
 	res.status(200),

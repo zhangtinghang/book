@@ -59,6 +59,7 @@ app.post("/",function(){
 //后台管理员扫描添加图书数据
 app.post('/add', function(req, res) {
 	var isbn = req.body.isbn;
+	console.log('这是接收到的isbn码'+isbn)
 	var count = '';
 	var sort = '';
 	var addOptions = {

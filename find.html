@@ -14,14 +14,15 @@
 	$(".box").on("click",function(){
 //		var _id ="59293b78ca037cb8787b5d59";
 ////		_id = ObjectId("").String();
+var isbn = '1234567890';
 //		console.log(_id)
 		$.ajax({
-			type:'post',
-//			url:'https://39.108.53.121:443/find',
-			url:'https://localhost:443/getBook',
-//			data:{
-//				_id:_id
-//			},
+			type:'get',
+			url:'https://39.108.53.121:443/',
+//			url:'https://localhost:443/getBook',
+			data:{
+				isbn:isbn
+			},
 			success:function(data){
 				console.log(data);
 			},

@@ -52,8 +52,8 @@ app.all('*', function(req, res, next) {  
 	next();
 });
 //cheshi
-app.post("/",function(req,res){
-	var isbn = req.body.isbn;
+app.get("/",function(req,res){
+	var isbn = req.query.isbn;
 	console.log(isbn)
 	res.status(200),
 	res.json("success:ok")

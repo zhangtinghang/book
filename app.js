@@ -53,7 +53,10 @@ app.all('*', function(req, res, next) {  
 });
 //cheshi
 app.post("/",function(){
-	
+	var isbn = req.body.isbn;
+	console.log(isbn)
+	res.status(200),
+	res.json('success:OK')	
 });
 
 //后台管理员扫描添加图书数据

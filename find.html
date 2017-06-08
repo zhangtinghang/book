@@ -18,11 +18,11 @@ var isbn = '1234567890';
 //		console.log(_id)
 		$.ajax({
 			type:'get',
-			url:'https://39.108.53.121:443/',
-//			url:'https://localhost:443/getBook',
-			data:{
-				isbn:isbn
-			},
+			url:'https://39.108.53.121/',
+//			url:'https://localhost:443/',
+//			data:{
+//				isbn:isbn
+//			},
 			success:function(data){
 				console.log(data);
 			},
